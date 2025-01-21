@@ -1,6 +1,6 @@
 ## Intro
 
-Bienvenido/a al desafío técnico de AlquilaTuCancha. Este proyecto simula un servicio de búsqueda de disponibilidad de canchas,
+Bienvenido/a al desafío técnico de ATC. Este proyecto simula un servicio de búsqueda de disponibilidad de canchas,
 el cuál está tardando mucho y no tolera gran cantidad de solicitudes por minuto. 
 
 El objetivo de este desafío es optimizar el servicio para que responda lo más rápido posible, con información actualizada
@@ -96,7 +96,7 @@ Qué vamos a evaluar? La idea es que este desafío se asemeje lo máximo posible
 - Se espera que se entienda y se respete la arquitectura de la aplicación
 - Si se decide investigar técnicas y/o patrones para resolver este problema, está perfecto y nos gustaría saber los links consultados
 - Son bienvenidas las consultas, como en cualquier equipo resolvemos las cosas juntos
-- En caso de falta de tiempo, se valora la priorización para atacar lo más importante y documentar lo que faltaría
+- En caso de falta de tiempo o no se sepa como resolver alguna cuestión en particular, se valora la priorización para atacar lo más importante y documentar lo que faltaría y como lo resolverían
 
 
 ## Reglas y tips
