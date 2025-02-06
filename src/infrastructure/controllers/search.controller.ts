@@ -1,5 +1,4 @@
-/* eslint-disable */
-import { Controller, Get, Query, Logger, UsePipes } from '@nestjs/common';
+import { Controller, Get, Logger, Query, UsePipes } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import * as moment from 'moment';
 import { createZodDto, ZodValidationPipe } from 'nestjs-zod';

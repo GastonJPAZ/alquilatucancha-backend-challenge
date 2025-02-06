@@ -1,5 +1,4 @@
-/* eslint-disable */
-import { Injectable, OnModuleInit, OnModuleDestroy, Inject } from '@nestjs/common';
+import { Inject,Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { RedisClientType } from 'redis';
 
 @Injectable()

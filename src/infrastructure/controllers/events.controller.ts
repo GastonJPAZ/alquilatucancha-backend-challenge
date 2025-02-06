@@ -1,5 +1,4 @@
-/* eslint-disable */
-import { Body, Controller, Post, Logger } from '@nestjs/common';
+import { Body, Controller, Logger,Post } from '@nestjs/common';
 import { EventBus } from '@nestjs/cqrs';
 import { UseZodGuard } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
