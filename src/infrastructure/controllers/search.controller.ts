@@ -1,4 +1,5 @@
-import { Controller, Get, Query, UsePipes } from '@nestjs/common';
+/* eslint-disable */
+import { Controller, Get, Query, Logger, UsePipes } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import * as moment from 'moment';
 import { createZodDto, ZodValidationPipe } from 'nestjs-zod';
@@ -18,19 +19,31 @@ const GetAvailabilitySchema = z.object({
     .transform((date) => moment(date).toDate()),
 });
 
-class GetAvailabilityDTO extends createZodDto(GetAvailabilitySchema) {}
+class GetAvailabilityDTO extends createZodDto(GetAvailabilitySchema) { }
 
 @Controller('search')
 export class SearchController {
-  constructor(private queryBus: QueryBus) {}
+  private readonly logger = new Logger(SearchController.name);
+
+  constructor(private readonly queryBus: QueryBus) { }
 
   @Get()
   @UsePipes(ZodValidationPipe)
-  searchAvailability(
+  async searchAvailability(
     @Query() query: GetAvailabilityDTO,
   ): Promise<ClubWithAvailability[]> {
-    return this.queryBus.execute(
-      new GetAvailabilityQuery(query.placeId, query.date),
-    );
+    this.logger.log(`Received search request for placeId: ${query.placeId} and date: ${moment(query.date).format('YYYY-MM-DD')}`);
+
+    try {
+      const result = await this.queryBus.execute(
+        new GetAvailabilityQuery(query.placeId, query.date),
+      );
+      this.logger.log(`Search completed successfully.`);
+      return result;
+    } catch (error: any) {
+      this.logger.error(`Search failed for placeId: ${query.placeId} and date: ${moment(query.date).format('YYYY-MM-DD')}`, error.stack);
+
+      throw error;
+    }
   }
 }

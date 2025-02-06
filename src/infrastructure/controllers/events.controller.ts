@@ -1,4 +1,5 @@
-import { Body, Controller, Post } from '@nestjs/common';
+/* eslint-disable */
+import { Body, Controller, Post, Logger } from '@nestjs/common';
 import { EventBus } from '@nestjs/cqrs';
 import { UseZodGuard } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
@@ -43,44 +44,62 @@ export type ExternalEventDTO = z.infer<typeof ExternalEventSchema>;
 
 @Controller('events')
 export class EventsController {
-  constructor(private eventBus: EventBus) {}
+  private readonly logger = new Logger(EventsController.name);
+
+  constructor(private readonly eventBus: EventBus) { }
 
   @Post()
   @UseZodGuard('body', ExternalEventSchema)
   async receiveEvent(@Body() externalEvent: ExternalEventDTO) {
-    switch (externalEvent.type) {
-      case 'booking_created':
-        this.eventBus.publish(
-          new SlotBookedEvent(
-            externalEvent.clubId,
-            externalEvent.courtId,
-            externalEvent.slot,
-          ),
-        );
-        break;
-      case 'booking_cancelled':
-        this.eventBus.publish(
-          new SlotAvailableEvent(
-            externalEvent.clubId,
-            externalEvent.courtId,
-            externalEvent.slot,
-          ),
-        );
-        break;
-      case 'club_updated':
-        this.eventBus.publish(
-          new ClubUpdatedEvent(externalEvent.clubId, externalEvent.fields),
-        );
-        break;
-      case 'court_updated':
-        this.eventBus.publish(
-          new CourtUpdatedEvent(
-            externalEvent.clubId,
-            externalEvent.courtId,
-            externalEvent.fields,
-          ),
-        );
-        break;
+    this.logger.log(`Received event: ${externalEvent.type}`);
+
+    try {
+      switch (externalEvent.type) {
+        case 'booking_created':
+          this.eventBus.publish(
+            new SlotBookedEvent(
+              externalEvent.clubId,
+              externalEvent.courtId,
+              externalEvent.slot,
+            ),
+          );
+          this.logger.log(`Processed booking_created event for clubId: ${externalEvent.clubId}, courtId: ${externalEvent.courtId}`);
+          break;
+        case 'booking_cancelled':
+          this.eventBus.publish(
+            new SlotAvailableEvent(
+              externalEvent.clubId,
+              externalEvent.courtId,
+              externalEvent.slot,
+            ),
+          );
+          this.logger.log(`Processed booking_cancelled event for clubId: ${externalEvent.clubId}, courtId: ${externalEvent.courtId}`);
+          break;
+        case 'club_updated':
+          this.eventBus.publish(
+            new ClubUpdatedEvent(externalEvent.clubId, externalEvent.fields),
+          );
+          this.logger.log(`Processed club_updated event for clubId: ${externalEvent.clubId}`);
+          break;
+        case 'court_updated':
+          this.eventBus.publish(
+            new CourtUpdatedEvent(
+              externalEvent.clubId,
+              externalEvent.courtId,
+              externalEvent.fields,
+            ),
+          );
+          this.logger.log(`Processed court_updated event for clubId: ${externalEvent.clubId}, courtId: ${externalEvent.courtId}`);
+          break;
+        default:
+          this.logger.warn(`Unknown event type received: ${(externalEvent as any).type}`);
+          return { status: 'error', message: `Unknown event type: ${(externalEvent as any).type}` };
+      }
+
+      return { status: 'success', message: 'Event processed successfully' };
+    } catch (error: any) {
+      this.logger.error(`Error processing event: ${externalEvent.type}`, error.stack || error);
+      return { status: 'error', message: 'Failed to process event' };
     }
   }
 }

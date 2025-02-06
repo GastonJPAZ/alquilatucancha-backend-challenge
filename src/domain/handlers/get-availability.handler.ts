@@ -1,5 +1,6 @@
-import { Inject } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { RedisService } from 'src/redis.service';
 
 import {
   ClubWithAvailability,
@@ -12,35 +13,59 @@ import {
 
 @QueryHandler(GetAvailabilityQuery)
 export class GetAvailabilityHandler
-  implements IQueryHandler<GetAvailabilityQuery>
-{
+  implements IQueryHandler<GetAvailabilityQuery> {
+  private readonly logger = new Logger(GetAvailabilityHandler.name);
+
   constructor(
     @Inject(ALQUILA_TU_CANCHA_CLIENT)
-    private alquilaTuCanchaClient: AlquilaTuCanchaClient,
-  ) {}
+    private readonly alquilaTuCanchaClient: AlquilaTuCanchaClient,
+    private readonly redisService: RedisService
+  ) { }
 
   async execute(query: GetAvailabilityQuery): Promise<ClubWithAvailability[]> {
-    const clubs_with_availability: ClubWithAvailability[] = [];
-    const clubs = await this.alquilaTuCanchaClient.getClubs(query.placeId);
-    for (const club of clubs) {
-      const courts = await this.alquilaTuCanchaClient.getCourts(club.id);
-      const courts_with_availability: ClubWithAvailability['courts'] = [];
-      for (const court of courts) {
-        const slots = await this.alquilaTuCanchaClient.getAvailableSlots(
-          club.id,
-          court.id,
-          query.date,
-        );
-        courts_with_availability.push({
-          ...court,
-          available: slots,
-        });
-      }
-      clubs_with_availability.push({
-        ...club,
-        courts: courts_with_availability,
-      });
+    this.logger.log(`Fetching availability for placeId: ${query.placeId} and date: ${query.date}`);
+
+
+    const cacheKey = `availability:${query.placeId}:${query.date}`;
+
+    const cachedResponse = await this.redisService.get(cacheKey);
+    if (cachedResponse) {
+      this.logger.log(`Cache hit for placeId: ${query.placeId} and date: ${query.date}`);
+      return JSON.parse(cachedResponse);
     }
+
+    const clubs = await this.alquilaTuCanchaClient.getClubs(query.placeId);
+
+    const clubs_with_availability = await Promise.all(
+      clubs.map(async (club) => {
+        const courts = await this.alquilaTuCanchaClient.getCourts(club.id);
+
+        const courts_with_availability = await Promise.all(
+          courts.map(async (court) => {
+            const slots = await this.alquilaTuCanchaClient.getAvailableSlots(
+              club.id,
+              court.id,
+              query.date,
+            );
+            return {
+              ...court,
+              available: slots,
+            };
+          }),
+        );
+
+        return {
+          ...club,
+          courts: courts_with_availability,
+        };
+      }),
+    );
+
+
+    await this.redisService.set(cacheKey, JSON.stringify(clubs_with_availability), 3600);
+
+    this.logger.log(`Cache set for placeId: ${query.placeId} and date: ${query.date}`);
+
     return clubs_with_availability;
   }
 }
