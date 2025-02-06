@@ -27,7 +27,6 @@ export class HTTPAlquilaTuCanchaClient implements AlquilaTuCanchaClient {
     fetchFn: () => Promise<T>,
   ): Promise<T> {
     try {
-      // Intenta obtener el valor desde Redis
       const cachedData = await this.redisService.get(key);
       if (cachedData) {
         this.logger.log(`Cache hit for key: ${key}`);
@@ -37,7 +36,6 @@ export class HTTPAlquilaTuCanchaClient implements AlquilaTuCanchaClient {
       this.logger.log(`Cache miss for key: ${key}. Fetching from API.`);
       const data = await fetchFn();
 
-      // Almacena la respuesta en Redis
       await this.redisService.set(key, JSON.stringify(data), 3600);
       this.logger.log(`Data fetched and cached for key: ${key}`);
       return data;
