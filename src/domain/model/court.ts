@@ -1,4 +1,7 @@
+import { Slot } from "./slot";
+
 export interface Court {
   id: number;
-  // TODO: fill
+  name: string;
+  available: Slot[];
 }
