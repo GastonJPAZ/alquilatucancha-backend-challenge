@@ -26,7 +26,7 @@ export class SearchController {
 
   @Get()
   @UsePipes(ZodValidationPipe)
-  searchAvailability(
+  async searchAvailability(
     @Query() query: GetAvailabilityDTO,
   ): Promise<ClubWithAvailability[]> {
     return this.queryBus.execute(

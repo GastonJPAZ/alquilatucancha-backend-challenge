@@ -16,23 +16,40 @@ export class HTTPAlquilaTuCanchaClient implements AlquilaTuCanchaClient {
   }
 
   async getClubs(placeId: string): Promise<Club[]> {
+    console.log("No hay conexion con la api MOck, pero se ve esto");
+    
     return this.httpService.axiosRef
       .get('clubs', {
         baseURL: this.base_url,
         params: { placeId },
       })
-      .then((res) => res.data);
+      .then((res) => {
+        if (res.status === 200) {
+          return res.data;
+        }
+      })
+      .catch((error) => {
+        console.log("fallo comunicacion con API mock");
+        console.log("devolver datos guardados en el backup JSON");
+        return [];
+      });
   }
 
-  getCourts(clubId: number): Promise<Court[]> {
+  async getCourts(clubId: number): Promise<Court[]> {
     return this.httpService.axiosRef
       .get(`/clubs/${clubId}/courts`, {
         baseURL: this.base_url,
       })
-      .then((res) => res.data);
+      .then((res) => res.data)
+      .catch((error) => {
+        console.log("fallo comunicacion con API mock");
+        console.log("devolver datos guardados en el backup JSON");
+        return [];
+      });
+      
   }
 
-  getAvailableSlots(
+  async getAvailableSlots(
     clubId: number,
     courtId: number,
     date: Date,
@@ -42,6 +59,12 @@ export class HTTPAlquilaTuCanchaClient implements AlquilaTuCanchaClient {
         baseURL: this.base_url,
         params: { date: moment(date).format('YYYY-MM-DD') },
       })
-      .then((res) => res.data);
+      .then((res) => res.data)
+      .catch((error) => {
+        console.log("fallo comunicacion con API mock");
+        console.log("devolver datos guardados en el backup JSON");
+        return [];
+      });
   }
 }
+

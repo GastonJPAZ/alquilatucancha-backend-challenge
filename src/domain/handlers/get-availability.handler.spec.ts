@@ -6,14 +6,24 @@ import { Club } from '../model/club';
 import { Court } from '../model/court';
 import { Slot } from '../model/slot';
 import { GetAvailabilityHandler } from './get-availability.handler';
+import { Cache } from 'cache-manager';
 
 describe('GetAvailabilityHandler', () => {
   let handler: GetAvailabilityHandler;
   let client: FakeAlquilaTuCanchaClient;
+  let cacheManager: Cache;
+  
 
   beforeEach(() => {
     client = new FakeAlquilaTuCanchaClient();
-    handler = new GetAvailabilityHandler(client);
+    cacheManager = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      reset: jest.fn(),
+      store: {},
+    } as unknown as Cache;
+    handler = new GetAvailabilityHandler(client, cacheManager);
   });
 
   it('returns the availability', async () => {
